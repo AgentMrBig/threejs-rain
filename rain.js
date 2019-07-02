@@ -1,5 +1,7 @@
-let scene, camera, renderer, ambient, directionalLight,
-    cloudGeo, cloudMaterial, cloudParticles = [], flash;
+var scene, camera, renderer, ambient, directionalLight,
+    cloudGeo, cloudMaterial, cloudParticles = [],
+    flash, rain,
+    rainGeo, rainCount = 15000;
 
 var cloudIMG = 'cloud2.png';
 var cloudTexture = `./img/${cloudIMG}`
@@ -7,30 +9,43 @@ var cloudTexture = `./img/${cloudIMG}`
 function init() {
     scene = new THREE.Scene();
 
-    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
-    camera.position.z = 1;
-    camera.rotation.x = 1.16;
-    camera.rotation.y = -0.12;
-    camera.rotation.z = 0.27;
+    setupCamera();
+    setupLights();
+    setupRenderer();
+    setupClouds();
+    setupRain();
+}
 
-    ambient = new THREE.AmbientLight(0x55555);
-    scene.add(ambient);
 
-    directionalLight = new THREE.DirectionalLight(0xffeedd);
-    directionalLight.position.set(0, 0, 1);
-    scene.add(directionalLight);
+function setupRain() {
+    rainGeo = new THREE.Geometry();
+    for (let i = 0; i < rainCount; i++) {
+        rainDrop = new THREE.Vector3(
+            Math.random() * 400 - 200,
+            Math.random() * 500 - 250,
+            Math.random() * 400 - 200
+        );
+        rainGeo.vertices.push(rainDrop);
+    }
 
-    flash = new THREE.PointLight(0x062d89, 0, 500, 1.7);
-    flash.position.set(200, 300, 100);
-    scene.add(flash);
+    rainMaterial = new THREE.PointsMaterial({
+        color: 0xaaaaaa,
+        size: 0.1,
+        transparent: true
+    })
 
-    renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+    if (!rain) {
+        rain = new THREE.Points(rainMaterial);
+    }
 
-    let loader = new THREE.TextureLoader();
 
-    loader.load(cloudTexture, function (texture) {
+    scene.add(rain);
+}
+
+function setupClouds() {
+    var loader = new THREE.TextureLoader();
+
+    loader.load(cloudTexture, function(texture) {
         cloudGeo = new THREE.PlaneBufferGeometry(500, 500);
         cloudMaterial = new THREE.MeshLambertMaterial({
             map: texture,
@@ -54,6 +69,33 @@ function init() {
         }
         animate();
     });
+}
+
+function setupCamera() {
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+    camera.position.z = 1;
+    camera.rotation.x = 1.16;
+    camera.rotation.y = -0.12;
+    camera.rotation.z = 0.27;
+}
+
+function setupLights() {
+    ambient = new THREE.AmbientLight(0x55555);
+    scene.add(ambient);
+
+    directionalLight = new THREE.DirectionalLight(0xffeedd);
+    directionalLight.position.set(0, 0, 1);
+    scene.add(directionalLight);
+
+    flash = new THREE.PointLight(0x062d89, 0, 500, 1.7);
+    flash.position.set(200, 300, 100);
+    scene.add(flash);
+}
+
+function setupRenderer() {
+    renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
 }
 
 function animate() {
